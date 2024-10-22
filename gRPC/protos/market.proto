@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package marketplace;
+
+// Enum for category types
+enum Category {
+  ELECTRONICS = 0;
+  FASHION = 1;
+  OTHERS = 2;
+  ANY = 3; // Used for searching items
+}
+
+message Response {
+  bool success = 1;
+  string message = 2; // Additional message for status or error
+  string uuid = 3;     // Seller UUID
+  int32 item_id = 4;   // Item ID (optional)
+}
+
+// Message for item details
+message Item {
+  int32 id = 1;
+  string name = 2;
+  Category category = 3;
+  int32 quantity = 4;
+  string description = 5;
+  float price = 6;
+  string seller_address = 7; // ip:port
+  float rating = 8; // Average rating
+  repeated string rated_by = 9; // Buyers who have rated the item
+  repeated int32 ratings = 10; // Individual ratings for this item
+}
+
+// Seller-related messages
+message Seller {
+  string uuid = 1;
+  string address = 2; // ip:port where the notification server is hosted
+}
+
+message RegisterSellerRequest {
+  Seller seller = 1;
+}
+
+message ItemList {
+  repeated Item items = 1;
+}
+
+message SellItemRequest {
+  string uuid = 1;
+  Item item = 2;
+}
+
+message UpdateItemRequest {
+  string uuid = 1;
+  int32 item_id = 2;
+  int32 quantity = 3;
+  float price = 4;
+}
+
+message DeleteItemRequest {
+  string uuid = 1;
+  int32 item_id = 2;
+}
+
+message DisplaySellerItemsRequest {
+  string uuid = 1;
+}
+
+// Buyer-related messages
+
+message SearchItemRequest {
+  string name = 1;
+  Category category = 2;
+}
+
+message BuyItemRequest {
+  string buyer_address = 1;
+  int32 item_id = 2;
+  int32 quantity = 3;
+}
+
+message WishListRequest {
+  string buyer_address = 1;
+  int32 item_id = 2;
+}
+
+message RateItemRequest {
+  string buyer_address = 1;
+  int32 item_id = 2;
+  int32 rating = 3; // Rating from 1 to 5
+}
+
+// Notification-related messages
+
+message NotificationRequest {
+  string client_id = 1; // Buyer or Seller unique ID
+}
+
+message NotificationResponse {
+  string message = 1; // The notification message
+  Item updated_item = 2; // Updated item details
+}
+
+// The service definition
+service MarketplaceService {
+  // Seller to Market methods
+  rpc RegisterSeller(RegisterSellerRequest) returns (Response) {}
+  rpc SellItem(SellItemRequest) returns (Response) {}
+  rpc UpdateItem(UpdateItemRequest) returns (Response) {}
+  rpc DeleteItem(DeleteItemRequest) returns (Response) {}
+  rpc DisplaySellerItems(DisplaySellerItemsRequest) returns (ItemList) {}
+
+  // Buyer to Market methods
+  rpc SearchItem(SearchItemRequest) returns (ItemList) {}
+  rpc BuyItem(BuyItemRequest) returns (Response) {}
+  rpc AddToWishList(WishListRequest) returns (Response) {}
+  rpc RateItem(RateItemRequest) returns (Response) {}
+  
+  // Notifications
+  rpc NotifyClient(NotificationRequest) returns (stream NotificationResponse);
+}
